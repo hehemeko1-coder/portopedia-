@@ -14,7 +14,7 @@ const createProjectSchema = z.object({
 
 const updateProjectSchema = createProjectSchema.partial().extend({
   visibility: z.enum(["PRIVATE", "PUBLIC"]).optional(),
-  sortOrder: z.number().int().min(0).max(10000).optional()
+  sortOrder: z.number().int().min(0).max(10000).optional(),\n  coverAssetId: z.string().min(1).max(64).nullable().optional()
 }).strict();
 
 function toSlug(value: string): string {
