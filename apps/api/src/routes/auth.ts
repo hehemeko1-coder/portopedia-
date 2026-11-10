@@ -57,7 +57,8 @@ function clearOAuthCookies(response: Response) {
     }));
   }
 }
-const SESSION_TTL_MS = env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;\nconst DUMMY_PASSWORD_HASH = argon2.hash(randomBytes(32).toString("hex"), { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
+const SESSION_TTL_MS = env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
+const DUMMY_PASSWORD_HASH = argon2.hash(randomBytes(32).toString("hex"), { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
 const cookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
@@ -109,7 +110,14 @@ function assertTrustedOrigin(request: Request, response: Response): boolean {
   return true;
 }
 
-async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {\n  const token = randomBytes(32).toString("base64url");\n  await prisma.emailToken.deleteMany({ where: { userId, type } });\n  await prisma.emailToken.create({ data: { userId, tokenHash: hashToken(token), type, expiresAt: new Date(Date.now() + lifetimeMs) } });\n  return token;\n}\n\nasync function issueSession(userId: string, response: Response) {
+async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {
+  const token = randomBytes(32).toString("base64url");
+  await prisma.emailToken.deleteMany({ where: { userId, type } });
+  await prisma.emailToken.create({ data: { userId, tokenHash: hashToken(token), type, expiresAt: new Date(Date.now() + lifetimeMs) } });
+  return token;
+}
+
+async function issueSession(userId: string, response: Response) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
   await prisma.session.create({
@@ -132,7 +140,16 @@ export type AuthenticatedRequest = Request & {
   };
 };
 
-export async function requireAdmin(request: Request, response: Response, next: NextFunction) {\n  const user = (request as AuthenticatedRequest).authUser;\n  if (!user || user.role !== "ADMIN") {\n    response.status(403).json({ error: { code: "FORBIDDEN", message: "Administrator access is required." } });\n    return;\n  }\n  next();\n}\n\nexport async function requireAuth(request: Request, response: Response, next: NextFunction) {
+export async function requireAdmin(request: Request, response: Response, next: NextFunction) {
+  const user = (request as AuthenticatedRequest).authUser;
+  if (!user || user.role !== "ADMIN") {
+    response.status(403).json({ error: { code: "FORBIDDEN", message: "Administrator access is required." } });
+    return;
+  }
+  next();
+}
+
+export async function requireAuth(request: Request, response: Response, next: NextFunction) {
   try {
     const token = readSessionToken(request);
     if (!token || token.length > 128) {
