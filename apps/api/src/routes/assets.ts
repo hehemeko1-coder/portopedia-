@@ -79,7 +79,6 @@ router.post("/presign", async (request, response, next) => {
       Key: storageKey,
       ContentType: parsed.data.mimeType,
       ContentLength: parsed.data.sizeBytes,
-      Metadata: { ownerid: user.id, assetid: asset.id }
     });
     const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 300 });
     response.status(201).json({
