@@ -7,6 +7,7 @@ import * as oidc from "openid-client";
 import { parse, serialize } from "cookie";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
+import { isEmailDeliveryConfigured, sendTransactionalEmail } from "../lib/email.js";
 
 const router = Router();
 const authAttemptLimiter = rateLimit({
@@ -108,7 +109,7 @@ function assertTrustedOrigin(request: Request, response: Response): boolean {
   return true;
 }
 
-async function issueSession(userId: string, response: Response) {
+async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {\n  const token = randomBytes(32).toString("base64url");\n  await prisma.emailToken.create({ data: { userId, tokenHash: hashToken(token), type, expiresAt: new Date(Date.now() + lifetimeMs) } });\n  return token;\n}\n\nasync function issueSession(userId: string, response: Response) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
   await prisma.session.create({
@@ -293,6 +294,116 @@ router.post("/register", authAttemptLimiter, async (request, response, next) => 
   }
 });
 
+
+router.post("/verify-email", authAttemptLimiter, async (request, response, next) => {
+  if (!assertTrustedOrigin(request, response)) return;
+  const parsed = z.object({ token: z.string().min(32).max(128) }).safeParse(request.body);
+  if (!parsed.success) {
+    response.status(400).json({ error: { code: "INVALID_VERIFICATION_TOKEN", message: "This verification link is invalid or expired." } });
+    return;
+  }
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const token = await tx.emailToken.findUnique({
+        where: { tokenHash: hashToken(parsed.data.token) },
+        include: { user: { select: { id: true, email: true, username: true, displayName: true, role: true } } }
+      });
+      if (!token || token.type !== "VERIFY_EMAIL" || token.consumedAt || token.expiresAt <= new Date()) return null;
+      await tx.emailToken.update({ where: { id: token.id }, data: { consumedAt: new Date() } });
+      await tx.user.update({ where: { id: token.userId }, data: { emailVerifiedAt: new Date() } });
+      return token.user;
+    });
+    if (!result) {
+      response.status(400).json({ error: { code: "INVALID_VERIFICATION_TOKEN", message: "This verification link is invalid or expired." } });
+      return;
+    }
+    await issueSession(result.id, response);
+    response.status(200).json({ user: result });
+  } catch (error) { next(error); }
+});
+
+router.post("/resend-verification", authAttemptLimiter, async (request, response, next) => {
+  if (!assertTrustedOrigin(request, response)) return;
+  const parsed = z.object({ email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()) }).safeParse(request.body);
+  if (!parsed.success) {
+    response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Enter a valid email address." } });
+    return;
+  }
+  if (!isEmailDeliveryConfigured) {
+    response.status(503).json({ error: { code: "EMAIL_NOT_CONFIGURED", message: "Email delivery is not configured." } });
+    return;
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+    if (user && !user.emailVerifiedAt) {
+      const token = await createEmailToken(user.id, "VERIFY_EMAIL", 24 * 60 * 60 * 1000);
+      const url = new URL("/verify-email", env.WEB_ORIGIN);
+      url.searchParams.set("token", token);
+      await sendTransactionalEmail({
+        to: { email: user.email, name: user.displayName },
+        subject: "Verify your Portopedia email",
+        htmlContent: `<p><a href="${url.href}">Verify your Portopedia email</a></p><p>This link expires in 24 hours.</p>`,
+        textContent: `Verify your Portopedia email: ${url.href}`
+      });
+    }
+    response.status(200).json({ message: "If the account needs verification, an email will be sent." });
+  } catch (error) { next(error); }
+});
+
+router.post("/password-reset/request", authAttemptLimiter, async (request, response, next) => {
+  if (!assertTrustedOrigin(request, response)) return;
+  const parsed = z.object({ email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()) }).safeParse(request.body);
+  if (!parsed.success) {
+    response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Enter a valid email address." } });
+    return;
+  }
+  if (!isEmailDeliveryConfigured) {
+    response.status(503).json({ error: { code: "EMAIL_NOT_CONFIGURED", message: "Email delivery is not configured." } });
+    return;
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+    if (user) {
+      const token = await createEmailToken(user.id, "PASSWORD_RESET", 60 * 60 * 1000);
+      const url = new URL("/reset-password", env.WEB_ORIGIN);
+      url.searchParams.set("token", token);
+      await sendTransactionalEmail({
+        to: { email: user.email, name: user.displayName },
+        subject: "Reset your Portopedia password",
+        htmlContent: `<p>Use this link to reset your Portopedia password:</p><p><a href="${url.href}">Reset password</a></p><p>This link expires in one hour.</p>`,
+        textContent: `Reset your Portopedia password: ${url.href} (expires in one hour).`
+      });
+    }
+    response.status(200).json({ message: "If an account exists for that address, password reset instructions will be sent." });
+  } catch (error) { next(error); }
+});
+
+router.post("/password-reset/confirm", authAttemptLimiter, async (request, response, next) => {
+  if (!assertTrustedOrigin(request, response)) return;
+  const parsed = z.object({ token: z.string().min(32).max(128), password: z.string().min(12).max(128) }).safeParse(request.body);
+  if (!parsed.success) {
+    response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Provide a valid reset token and a password of at least 12 characters." } });
+    return;
+  }
+  try {
+    const passwordHash = await argon2.hash(parsed.data.password, { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
+    const changed = await prisma.$transaction(async (tx) => {
+      const token = await tx.emailToken.findUnique({ where: { tokenHash: hashToken(parsed.data.token) } });
+      if (!token || token.type !== "PASSWORD_RESET" || token.consumedAt || token.expiresAt <= new Date()) return false;
+      await tx.emailToken.update({ where: { id: token.id }, data: { consumedAt: new Date() } });
+      await tx.user.update({ where: { id: token.userId }, data: { passwordHash } });
+      await tx.session.deleteMany({ where: { userId: token.userId } });
+      await tx.emailToken.deleteMany({ where: { userId: token.userId, type: "PASSWORD_RESET", id: { not: token.id } } });
+      return true;
+    });
+    if (!changed) {
+      response.status(400).json({ error: { code: "INVALID_RESET_TOKEN", message: "This password reset link is invalid or expired." } });
+      return;
+    }
+    response.status(200).json({ message: "Password updated. Sign in with your new password." });
+  } catch (error) { next(error); }
+});
+
 router.post("/login", authAttemptLimiter, async (request, response, next) => {
   if (!assertTrustedOrigin(request, response)) return;
   const parsed = loginSchema.safeParse(request.body);
@@ -304,7 +415,7 @@ router.post("/login", authAttemptLimiter, async (request, response, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { email: parsed.data.email },
-      select: { id: true, email: true, username: true, displayName: true, role: true, passwordHash: true }
+      select: { id: true, email: true, username: true, displayName: true, role: true, passwordHash: true, emailVerifiedAt: true }
     });
 
     const valid = user?.passwordHash
