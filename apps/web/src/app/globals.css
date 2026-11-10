@@ -222,3 +222,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .admin-table td:first-child { white-space: normal; }
 .admin-table small { display: block; margin-top: 4px; color: var(--muted); }
 @media (max-width: 760px) { .admin-metrics { grid-template-columns: repeat(2, 1fr); } .admin-search { flex-direction: column; } }
+
+.project-edit-form { display: flex; flex-direction: column; gap: 10px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.project-edit-form label { margin-top: 6px; font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.project-edit-form input, .project-edit-form textarea { width: 100%; padding: 11px 13px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; }
+.project-edit-actions { display: flex; gap: 8px; margin-top: 6px; }
+.project-edit-actions button { min-height: 40px; padding: 9px 14px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.project-edit-actions .button-primary { background: var(--accent); border-color: var(--accent); color: #171717; }
