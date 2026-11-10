@@ -21,6 +21,11 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [projectTitle, setProjectTitle] = useState("");
   const [projectSummary, setProjectSummary] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingSummary, setEditingSummary] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -80,13 +85,42 @@ export default function DashboardPage() {
     try {
       const result = await apiRequest<{ project: Project }>("/projects", {
         method: "POST",
-        body: JSON.stringify({ title: projectTitle, summary: projectSummary || undefined })
+        body: JSON.stringify({ title: projectTitle, summary: projectSummary || undefined, description: projectDescription || undefined })
       });
       setProjects((current) => [result.project, ...current]);
-      setProjectTitle(""); setProjectSummary("");
+      setProjectTitle(""); setProjectSummary(""); setProjectDescription("");
       setNotice("Project created.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to create project.");
+    } finally { setBusy(false); }
+  }
+
+
+  function startEditing(project: Project) {
+    setEditingProjectId(project.id);
+    setEditingTitle(project.title);
+    setEditingSummary(project.summary || "");
+    setEditingDescription(project.description || "");
+  }
+
+  async function saveProjectEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingProjectId) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const result = await apiRequest<{ project: Project }>("/projects/" + editingProjectId, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: editingTitle,
+          summary: editingSummary || null,
+          description: editingDescription || null
+        })
+      });
+      setProjects((current) => current.map((item) => item.id === editingProjectId ? result.project : item));
+      setEditingProjectId(null);
+      setNotice("Project details saved.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save project details.");
     } finally { setBusy(false); }
   }
 
@@ -200,18 +234,34 @@ export default function DashboardPage() {
             <input id="projectTitle" value={projectTitle} onChange={(event) => setProjectTitle(event.target.value)} minLength={2} maxLength={120} required placeholder="Give the work a name" />
             <label htmlFor="projectSummary">Short description</label>
             <textarea id="projectSummary" value={projectSummary} onChange={(event) => setProjectSummary(event.target.value)} maxLength={500} rows={2} placeholder="What is this project about?" />
+            <label htmlFor="projectDescription">Full description</label>
+            <textarea id="projectDescription" value={projectDescription} onChange={(event) => setProjectDescription(event.target.value)} maxLength={10000} rows={3} placeholder="Add context, process and outcomes." />
             <button className="button-primary" type="submit" disabled={busy}><Plus size={16} /> Add project</button>
           </form>
           <div className="project-list">
             {projects.length === 0 ? <div className="empty-state"><span>NO PROJECTS YET</span><p>Your first project will appear here after you create it.</p></div> : projects.map((project) => (
-              <article className="project-row" key={project.id}>
-                <div className="project-row-main"><strong>{project.title}</strong><p>{project.summary || "No description yet."}</p><span>{project.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}</span></div>
-                <div className="project-row-actions">
-                  <label className="project-cover-upload">Cover<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadProjectCover(project, file); event.currentTarget.value = ""; }} /></label>
-                  <button type="button" onClick={() => toggleProject(project)}>{project.visibility === "PUBLIC" ? "Make private" : "Publish"}</button>
-                  <button type="button" className="danger-action" onClick={() => deleteProject(project)} aria-label={"Delete " + project.title}><Trash2 size={15} /></button>
-                </div>
-              </article>
+              editingProjectId === project.id ? (
+                <form className="project-edit-form" key={project.id} onSubmit={saveProjectEdit}>
+                  <p className="eyebrow">EDIT PROJECT / {project.slug}</p>
+                  <label htmlFor={"edit-title-" + project.id}>Project title</label>
+                  <input id={"edit-title-" + project.id} value={editingTitle} onChange={(event) => setEditingTitle(event.target.value)} minLength={2} maxLength={120} required />
+                  <label htmlFor={"edit-summary-" + project.id}>Short description</label>
+                  <textarea id={"edit-summary-" + project.id} value={editingSummary} onChange={(event) => setEditingSummary(event.target.value)} maxLength={500} rows={2} />
+                  <label htmlFor={"edit-description-" + project.id}>Full description</label>
+                  <textarea id={"edit-description-" + project.id} value={editingDescription} onChange={(event) => setEditingDescription(event.target.value)} maxLength={10000} rows={4} />
+                  <div className="project-edit-actions"><button className="button-primary" type="submit" disabled={busy}>Save changes</button><button type="button" onClick={() => setEditingProjectId(null)}>Cancel</button></div>
+                </form>
+              ) : (
+                <article className="project-row" key={project.id}>
+                  <div className="project-row-main"><strong>{project.title}</strong><p>{project.summary || "No description yet."}</p><span>{project.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}</span></div>
+                  <div className="project-row-actions">
+                    <label className="project-cover-upload">Cover<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadProjectCover(project, file); event.currentTarget.value = ""; }} /></label>
+                    <button type="button" onClick={() => startEditing(project)}>Edit</button>
+                    <button type="button" onClick={() => toggleProject(project)}>{project.visibility === "PUBLIC" ? "Make private" : "Publish"}</button>
+                    <button type="button" className="danger-action" onClick={() => deleteProject(project)} aria-label={"Delete " + project.title}><Trash2 size={15} /></button>
+                  </div>
+                </article>
+              )
             ))}
           </div>
         </section>
