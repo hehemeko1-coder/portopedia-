@@ -2,11 +2,19 @@ import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import { parse, serialize } from "cookie";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 
 const router = Router();
+router.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 12,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: { code: "AUTH_RATE_LIMITED", message: "Too many authentication attempts. Try again later." } }
+}));
 const SESSION_COOKIE = "portopedia_session";
 const SESSION_TTL_MS = env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
 const cookieOptions = {
