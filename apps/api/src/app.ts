@@ -76,6 +76,18 @@ app.use((_request, response) => {
 const errorHandler: ErrorRequestHandler = (error: unknown, request, response, _next) => {
   logger.error({ err: error, method: request.method, path: request.path }, "Unhandled request error");
   if (response.headersSent) return;
+
+  const status = typeof error === "object" && error !== null && "status" in error && typeof error.status === "number"
+    ? error.status
+    : 500;
+  if (status === 400) {
+    response.status(400).json({ error: { code: "INVALID_JSON", message: "The request body contains invalid JSON." } });
+    return;
+  }
+  if (status === 413) {
+    response.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "The request body exceeds the allowed size." } });
+    return;
+  }
   response.status(500).json({
     error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." }
   });
