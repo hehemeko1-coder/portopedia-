@@ -2,6 +2,7 @@ CREATE TYPE "PortfolioVisibility" AS ENUM ('PRIVATE', 'PUBLIC');
 CREATE TYPE "ProjectVisibility" AS ENUM ('PRIVATE', 'PUBLIC');
 CREATE TYPE "AssetStatus" AS ENUM ('PENDING', 'READY', 'FAILED');
 CREATE TYPE "OAuthProvider" AS ENUM ('GOOGLE');
+CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
 
 CREATE TABLE "User" (
   "id" TEXT NOT NULL,
@@ -10,6 +11,7 @@ CREATE TABLE "User" (
   "displayName" TEXT NOT NULL,
   "username" TEXT NOT NULL,
   "passwordHash" TEXT,
+  "role" "UserRole" NOT NULL DEFAULT 'USER',
   "avatarAssetId" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
