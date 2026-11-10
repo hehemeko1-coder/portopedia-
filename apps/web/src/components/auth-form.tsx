@@ -14,6 +14,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -21,13 +22,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     setError("");
     setBusy(true);
     try {
-      await apiRequest(isRegister ? "/auth/register" : "/auth/login", {
+      const result = await apiRequest<{ message?: string }>(isRegister ? "/auth/register" : "/auth/login", {
         method: "POST",
         body: JSON.stringify(isRegister
           ? { email, password, username, displayName }
           : { email, password })
       });
-      window.location.assign("/dashboard");
+      if (isRegister) {\n        setNotice(result.message || "Check your email to verify your account.");\n        return;\n      }\n      window.location.assign("/dashboard");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to complete the request.");
     } finally {
@@ -57,14 +58,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <label htmlFor="password">Password</label>
           <input id="password" name="password" type="password" autoComplete={isRegister ? "new-password" : "current-password"} minLength={isRegister ? 12 : 1} maxLength={128} required value={password} onChange={(event) => setPassword(event.target.value)} />
           {isRegister && <p className="form-hint">Use at least 12 characters.</p>}
-          {error && <p className="form-error" role="alert">{error}</p>}
+          {error && <p className="form-error" role="alert">{error}</p>}\n          {notice && <p className="form-success" role="status">{notice}</p>}
           <button className="button-primary auth-submit" type="submit" disabled={busy}>
             {busy ? "Please wait…" : isRegister ? "Create account" : "Sign in"} <ArrowUpRight size={16} aria-hidden="true" />
           </button>
         </form>
         <div className="auth-divider"><span>OR</span></div>
         <a className="button-secondary auth-google" href={googleSignInUrl()}>Continue with Google <ArrowUpRight size={15} aria-hidden="true" /></a>
-        <p className="auth-switch">{isRegister ? "Already have an account?" : "New to Portopedia?"}{" "}<Link href={isRegister ? "/login" : "/register"}>{isRegister ? "Sign in" : "Create an account"}</Link></p>
+        {!isRegister && <p className="auth-forgot"><Link href="/forgot-password">Forgot your password?</Link></p>}\n        <p className="auth-switch">{isRegister ? "Already have an account?" : "New to Portopedia?"}{" "}<Link href={isRegister ? "/login" : "/register"}>{isRegister ? "Sign in" : "Create an account"}</Link></p>
       </section>
       <footer className="auth-footer"><span>PORTOPEDIA / INDEPENDENT BY DESIGN</span><Link href="/">Back to home</Link></footer>
     </main>
