@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: portopedia-api
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run db:generate --workspace=@portopedia/api && npm run build --workspace=@portopedia/api
+    startCommand: npm run start --workspace=@portopedia/api
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "10000"
+      - key: DATABASE_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: portopedia-web
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build --workspace=@portopedia/web
+    startCommand: npm run start --workspace=@portopedia/web
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
