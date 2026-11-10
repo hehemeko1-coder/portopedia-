@@ -2,7 +2,10 @@
   "name": "portopedia",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/web", "apps/api"],
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,green \"npm:dev --workspace=@portopedia/web\" \"npm:dev --workspace=@portopedia/api\"",
     "build": "npm run build --workspace=@portopedia/api && npm run build --workspace=@portopedia/web",
@@ -14,7 +17,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "prisma": "^6.7.0"
   },
   "engines": {
     "node": ">=20.11.0",
