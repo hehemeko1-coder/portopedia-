@@ -273,7 +273,7 @@ router.get("/google/callback", async (request, response, next) => {
       userId = user.id;
     }
     await issueSession(userId, response);
-    response.redirect(303, env.WEB_ORIGIN);
+    response.redirect(303, new URL("/dashboard", env.WEB_ORIGIN).href);
   } catch (error) {
     next(error);
   }
