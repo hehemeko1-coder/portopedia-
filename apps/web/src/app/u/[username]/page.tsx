@@ -10,6 +10,7 @@ type PublicProject = {
   summary: string | null;
   description: string | null;
   publishedAt: string | null;
+  coverUrl: string | null;
 };
 
 type PublicPortfolio = {
