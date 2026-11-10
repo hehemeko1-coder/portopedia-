@@ -7,7 +7,12 @@ const environmentSchema = z.object({
   DATABASE_URL: z.string().url(),
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
-  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30)
+  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().optional(),
+  R2_PUBLIC_BASE_URL: z.string().url().optional()
 });
 
 const parsed = environmentSchema.safeParse(process.env);
