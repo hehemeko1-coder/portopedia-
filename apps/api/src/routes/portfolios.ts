@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { publicAssetUrl } from "../lib/storage.js";
-import { requireAuth, type AuthenticatedRequest } from "./auth.js";
+import { requireAuth, requireTrustedOrigin, type AuthenticatedRequest } from "./auth.js";
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.get("/me", requireAuth, async (request, response, next) => {
   }
 });
 
-router.patch("/me", requireAuth, async (request, response, next) => {
+router.patch("/me", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   const parsed = updatePortfolioSchema.safeParse(request.body);
   if (!parsed.success) {
     response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Check the portfolio details.", details: parsed.error.flatten().fieldErrors } });
@@ -59,7 +59,7 @@ router.patch("/me", requireAuth, async (request, response, next) => {
   }
 });
 
-router.post("/publish", requireAuth, async (request, response, next) => {
+router.post("/publish", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   try {
     const user = (request as AuthenticatedRequest).authUser;
     const portfolio = await prisma.portfolio.findUnique({ where: { userId: user.id } });
@@ -77,7 +77,7 @@ router.post("/publish", requireAuth, async (request, response, next) => {
   }
 });
 
-router.post("/unpublish", requireAuth, async (request, response, next) => {
+router.post("/unpublish", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   try {
     const user = (request as AuthenticatedRequest).authUser;
     const portfolio = await prisma.portfolio.update({
@@ -132,15 +132,16 @@ router.get("/:username", async (request, response, next) => {
       response.status(404).json({ error: { code: "PORTFOLIO_NOT_FOUND", message: "Portfolio not found." } });
       return;
     }
+    const { avatarAsset, ...publicUser } = portfolio.user;
     const result = {
       ...portfolio,
       user: {
-        ...portfolio.user,
-        avatarUrl: portfolio.user.avatarAsset?.storageKey ? publicAssetUrl(portfolio.user.avatarAsset.storageKey) : null
+        ...publicUser,
+        avatarUrl: avatarAsset?.storageKey ? publicAssetUrl(avatarAsset.storageKey) : null
       },
-      projects: portfolio.projects.map((project) => ({
+      projects: portfolio.projects.map(({ coverAsset, ...project }) => ({
         ...project,
-        coverUrl: project.coverAsset?.storageKey ? publicAssetUrl(project.coverAsset.storageKey) : null
+        coverUrl: coverAsset?.storageKey ? publicAssetUrl(coverAsset.storageKey) : null
       }))
     };
     response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
