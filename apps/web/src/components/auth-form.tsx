@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { apiRequest, googleSignInUrl } from "@/lib/api";
@@ -8,6 +9,7 @@ import { apiRequest, googleSignInUrl } from "@/lib/api";
 type AuthMode = "login" | "register";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
+  const router = useRouter();
   const isRegister = mode === "register";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +34,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         setNotice(result.message || "Check your email to verify your account.");
         return;
       }
-      window.location.assign("/dashboard");
+      router.push("/dashboard");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to complete the request.");
     } finally {
