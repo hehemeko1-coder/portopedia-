@@ -8,6 +8,7 @@ import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
 import { portfolioRouter } from "./routes/portfolios.js";
 import { projectRouter } from "./routes/projects.js";
+import { assetRouter } from "./routes/assets.js";
 
 export const app = express();
 
@@ -57,6 +58,7 @@ api.get("/", (_request, response) => {
 api.use("/auth", authRouter);
 api.use("/portfolios", portfolioRouter);
 api.use("/projects", projectRouter);
+api.use("/assets", assetRouter);
 app.use("/api/v1", api);
 
 app.use((_request, response) => {
