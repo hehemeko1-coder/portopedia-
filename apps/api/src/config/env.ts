@@ -19,6 +19,31 @@ const environmentSchema = z.object({
   BREVO_API_KEY: z.string().optional(),
   BREVO_SENDER_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
   BREVO_SENDER_NAME: z.string().default("Portopedia")
+}).superRefine((config, context) => {
+  if (config.NODE_ENV === "production" && !process.env.WEB_ORIGIN) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["WEB_ORIGIN"], message: "WEB_ORIGIN must be explicitly configured in production." });
+  }
+
+  const r2Settings = [config.R2_ACCOUNT_ID, config.R2_ACCESS_KEY_ID, config.R2_SECRET_ACCESS_KEY, config.R2_BUCKET_NAME];
+  if (r2Settings.some(Boolean) && !r2Settings.every(Boolean)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["R2_ACCOUNT_ID"], message: "Configure all R2 account, key, secret and bucket values together." });
+  }
+  if (config.NODE_ENV === "production" && r2Settings.every(Boolean) && !config.R2_PUBLIC_BASE_URL) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["R2_PUBLIC_BASE_URL"], message: "Set the public asset domain when enabling production R2 uploads." });
+  }
+
+  const googleSettings = [config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET];
+  if (googleSettings.some(Boolean) && !googleSettings.every(Boolean)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["GOOGLE_CLIENT_ID"], message: "Configure both Google OAuth client ID and secret." });
+  }
+  if (config.NODE_ENV === "production" && googleSettings.every(Boolean) && new URL(config.GOOGLE_CALLBACK_URL).hostname === "localhost") {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["GOOGLE_CALLBACK_URL"], message: "Set the deployed API callback URL for production Google OAuth." });
+  }
+
+  const emailSettings = [config.BREVO_API_KEY, config.BREVO_SENDER_EMAIL];
+  if (emailSettings.some(Boolean) && !emailSettings.every(Boolean)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["BREVO_API_KEY"], message: "Configure both the Brevo API key and verified sender email." });
+  }
 });
 
 const parsed = environmentSchema.safeParse(process.env);
