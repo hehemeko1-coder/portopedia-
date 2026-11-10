@@ -1,5 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Asterisk, Layers3, ScanFace, Sparkles } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import Link from "next/link";
 
 const capabilities = [
   {
@@ -27,11 +28,12 @@ export default function HomePage() {
     <main className="site-shell">
       <header className="site-header">
         <a className="wordmark" href="/" aria-label="Portopedia home">porto<span>pedia</span><b>.</b></a>
-        <ThemeToggle />
         <nav className="nav-links" aria-label="Main navigation">
           <a href="#about">About</a>
           <a href="#features">Platform</a>
-          <a className="nav-cta" href="#get-started">Get started <ArrowUpRight size={14} aria-hidden="true" /></a>
+          <Link href="/login">Sign in</Link>
+          <ThemeToggle />
+          <Link className="nav-cta" href="/register">Get started <ArrowUpRight size={14} aria-hidden="true" /></Link>
         </nav>
       </header>
 
@@ -40,7 +42,7 @@ export default function HomePage() {
           <p className="eyebrow">The independent creator platform / 001</p>
           <h1 id="hero-title">MAKE WORK.<br /><em>MAKE</em> A MARK.</h1>
           <div className="hero-actions">
-            <a className="button-primary" href="#get-started">Build your portfolio <ArrowUpRight size={16} aria-hidden="true" /></a>
+            <Link className="button-primary" href="/register">Build your portfolio <ArrowUpRight size={16} aria-hidden="true" /></Link>
             <a className="button-secondary" href="#features">Explore the platform <ArrowDownRight size={16} aria-hidden="true" /></a>
           </div>
         </div>
@@ -79,7 +81,7 @@ export default function HomePage() {
           <div><p className="eyebrow">Your next chapter starts here</p><h2>Make it<br />public.</h2></div>
           <p>Portopedia is being built as a publishing home for independent creative work. The account, editor, and publishing flows are part of the implementation roadmap.</p>
         </div>
-        <a className="button-primary" href="#features">Explore the platform <ArrowUpRight size={16} aria-hidden="true" /></a>
+        <Link className="button-primary" href="/register">Create your portfolio <ArrowUpRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <footer className="site-footer">
