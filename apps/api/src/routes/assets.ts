@@ -192,9 +192,11 @@ router.delete("/:id", async (request, response, next) => {
       response.status(404).json({ error: { code: "ASSET_NOT_FOUND", message: "Asset not found." } });
       return;
     }
-    if (isObjectStorageConfigured && r2Client && env.R2_BUCKET_NAME) {
-      await r2Client.send(new DeleteObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: asset.storageKey }));
+    if (!isObjectStorageConfigured || !r2Client || !env.R2_BUCKET_NAME) {
+      response.status(503).json({ error: { code: "STORAGE_NOT_CONFIGURED", message: "File storage must be available before deleting this asset." } });
+      return;
     }
+    await r2Client.send(new DeleteObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: asset.storageKey }));
     await prisma.asset.delete({ where: { id: asset.id } });
     response.status(204).end();
   } catch (error) {
