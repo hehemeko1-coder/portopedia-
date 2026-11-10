@@ -1,4 +1,5 @@
-import { DeleteObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { fileTypeFromBuffer } from "file-type";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
@@ -114,8 +115,21 @@ router.post("/:id/complete", async (request, response, next) => {
       Bucket: env.R2_BUCKET_NAME,
       Key: asset.storageKey
     }));
-    if (head.ContentLength !== Number(asset.sizeBytes) || head.ContentType !== asset.mimeType) {
-      response.status(422).json({ error: { code: "UPLOAD_VERIFICATION_FAILED", message: "Uploaded file metadata does not match the authorized upload." } });
+    const sample = await r2Client.send(new GetObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: asset.storageKey,
+      Range: "bytes=0-8191"
+    }));
+    const sampleBytes = sample.Body ? await sample.Body.transformToByteArray() : new Uint8Array();
+    const detectedType = await fileTypeFromBuffer(sampleBytes);
+    if (
+      head.ContentLength !== Number(asset.sizeBytes) ||
+      head.ContentType !== asset.mimeType ||
+      detectedType?.mime !== asset.mimeType
+    ) {
+      await r2Client.send(new DeleteObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: asset.storageKey }));
+      await prisma.asset.update({ where: { id: asset.id }, data: { status: "FAILED" } });
+      response.status(422).json({ error: { code: "UPLOAD_VERIFICATION_FAILED", message: "Uploaded file content does not match the authorized file type or size." } });
       return;
     }
     const updated = await prisma.asset.update({
