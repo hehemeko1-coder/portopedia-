@@ -49,7 +49,7 @@ router.post("/presign", async (request, response, next) => {
   }
 
   try {
-    const user = (request as AuthenticatedRequest).authUser;
+    const user = (request as unknown as AuthenticatedRequest).authUser;
     if (parsed.data.projectId) {
       const ownedProject = await prisma.project.findFirst({
         where: { id: parsed.data.projectId, portfolio: { userId: user.id } },
@@ -105,7 +105,7 @@ router.post("/:id/complete", async (request, response, next) => {
   }
 
   try {
-    const user = (request as AuthenticatedRequest).authUser;
+    const user = (request as unknown as AuthenticatedRequest).authUser;
     const asset = await prisma.asset.findFirst({ where: { id: id.data, ownerId: user.id } });
     if (!asset) {
       response.status(404).json({ error: { code: "ASSET_NOT_FOUND", message: "Asset not found." } });
@@ -155,7 +155,7 @@ router.get("/", async (request, response, next) => {
     return;
   }
   try {
-    const user = (request as AuthenticatedRequest).authUser;
+    const user = (request as unknown as AuthenticatedRequest).authUser;
     const { page, limit } = query.data;
     const [assets, total] = await prisma.$transaction([
       prisma.asset.findMany({
@@ -186,7 +186,7 @@ router.delete("/:id", async (request, response, next) => {
     return;
   }
   try {
-    const user = (request as AuthenticatedRequest).authUser;
+    const user = (request as unknown as AuthenticatedRequest).authUser;
     const asset = await prisma.asset.findFirst({ where: { id: id.data, ownerId: user.id } });
     if (!asset) {
       response.status(404).json({ error: { code: "ASSET_NOT_FOUND", message: "Asset not found." } });
