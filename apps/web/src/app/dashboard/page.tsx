@@ -165,7 +165,7 @@ export default function DashboardPage() {
     <main className="dashboard-shell">
       <header className="dashboard-header">
         <Link className="wordmark" href="/">porto<span>pedia</span><b>.</b></Link>
-        <div className="dashboard-user"><span>{user?.displayName}</span><button className="icon-button" type="button" onClick={logout} aria-label="Sign out"><LogOut size={17} /></button></div>
+        <div className="dashboard-user"><span>{user?.displayName}</span>{user?.role === "ADMIN" && <Link href="/admin">Admin</Link>}<button className="icon-button" type="button" onClick={logout} aria-label="Sign out"><LogOut size={17} /></button></div>
       </header>
       <section className="dashboard-intro">
         <div><p className="eyebrow">CREATOR WORKSPACE / @{user?.username}</p><h1>YOUR WORK.<br /><em>YOUR SPACE.</em></h1></div>
