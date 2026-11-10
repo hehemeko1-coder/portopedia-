@@ -1,3 +1,5 @@
+import { env } from "../config/env.js";
+
 type EmailMessage = {
   to: { email: string; name?: string };
   subject: string;
@@ -6,18 +8,18 @@ type EmailMessage = {
 };
 
 export const isEmailDeliveryConfigured = Boolean(
-  process.env.BREVO_API_KEY &&
-  process.env.BREVO_SENDER_EMAIL
+  env.BREVO_API_KEY &&
+  env.BREVO_SENDER_EMAIL
 );
 
 export async function sendTransactionalEmail(message: EmailMessage): Promise<void> {
-  const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const apiKey = env.BREVO_API_KEY;
+  const senderEmail = env.BREVO_SENDER_EMAIL;
   if (!apiKey || !senderEmail) {
     throw new Error("Brevo email delivery is not configured.");
   }
 
-  const senderName = process.env.BREVO_SENDER_NAME || "Portopedia";
+  const senderName = env.BREVO_SENDER_NAME;
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
