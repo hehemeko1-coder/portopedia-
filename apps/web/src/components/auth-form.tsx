@@ -63,6 +63,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <input id="password" name="password" type="password" autoComplete={isRegister ? "new-password" : "current-password"} minLength={isRegister ? 12 : 1} maxLength={128} required value={password} onChange={(event) => setPassword(event.target.value)} />
           {isRegister && <p className="form-hint">Use at least 12 characters.</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
+          {error.toLowerCase().includes("verify your email") && <p className="form-hint"><Link href="/resend-verification">Resend verification email</Link></p>}
           {notice && <><p className="form-success" role="status">{notice}</p><p className="form-hint"><Link href="/resend-verification">Resend verification email</Link></p></>}
           <button className="button-primary auth-submit" type="submit" disabled={busy}>
             {busy ? "Please wait…" : isRegister ? "Create account" : "Sign in"} <ArrowUpRight size={16} aria-hidden="true" />
