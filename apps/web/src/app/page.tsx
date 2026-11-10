@@ -77,7 +77,7 @@ export default function HomePage() {
           <div><p className="eyebrow">Your next chapter starts here</p><h2>Make it<br />public.</h2></div>
           <p>Portopedia is being built as a publishing home for independent creative work. The account, editor, and publishing flows are part of the implementation roadmap.</p>
         </div>
-        <a className="button-primary" href="mailto:hello@portopedia.com">Contact the team <ArrowUpRight size={16} aria-hidden="true" /></a>
+        <a className="button-primary" href="#features">Explore the platform <ArrowUpRight size={16} aria-hidden="true" /></a>
       </section>
 
       <footer className="site-footer">
