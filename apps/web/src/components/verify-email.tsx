@@ -1,30 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
 
 export function VerifyEmail({ token }: { token: string }) {
+  const router = useRouter();
   const [message, setMessage] = useState("Verifying your email address…");
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
+    let redirectTimer: number | undefined;
     apiRequest("/auth/verify-email", {
       method: "POST",
       body: JSON.stringify({ token })
     }).then(() => {
       if (active) {
         setMessage("Your email is verified. Your creator workspace is ready.");
-        window.setTimeout(() => window.location.assign("/dashboard"), 1200);
+        redirectTimer = window.setTimeout(() => router.push("/dashboard"), 1200);
       }
     }).catch((error: unknown) => {
       if (!active) return;
       setFailed(true);
       setMessage(error instanceof Error ? error.message : "This verification link is invalid or expired.");
     });
-    return () => { active = false; };
-  }, [token]);
+    return () => { active = false; if (redirectTimer) window.clearTimeout(redirectTimer); };
+  }, [token, router]);
 
   return (
     <main className="auth-page">
