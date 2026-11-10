@@ -28,7 +28,8 @@
     "@aws-sdk/client-s3": "^3.800.0",
     "@aws-sdk/s3-request-presigner": "^3.800.0",
     "openid-client": "^6.6.4",
-    "prisma": "^6.7.0"
+    "prisma": "^6.7.0",
+    "file-type": "^20.5.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
