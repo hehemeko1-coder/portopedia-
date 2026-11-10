@@ -118,6 +118,7 @@ async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD
 }
 
 async function issueSession(userId: string, response: Response) {
+  await prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
   await prisma.session.create({
@@ -271,6 +272,10 @@ router.get("/google/callback", async (request, response, next) => {
 
 router.post("/register", authAttemptLimiter, async (request, response, next) => {
   if (!assertTrustedOrigin(request, response)) return;
+  if (!isEmailDeliveryConfigured) {
+    response.status(503).json({ error: { code: "EMAIL_NOT_CONFIGURED", message: "Email verification is not available on this deployment yet." } });
+    return;
+  }
   const parsed = registerSchema.safeParse(request.body);
   if (!parsed.success) {
     response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Check the submitted account details.", details: parsed.error.flatten().fieldErrors } });
@@ -300,8 +305,23 @@ router.post("/register", authAttemptLimiter, async (request, response, next) => 
       return created;
     });
 
-    await issueSession(user.id, response);
-    response.status(201).json({ user });
+    const verificationToken = await createEmailToken(user.id, "VERIFY_EMAIL", 24 * 60 * 60 * 1000);
+    const verificationUrl = new URL("/verify-email", env.WEB_ORIGIN);
+    verificationUrl.searchParams.set("token", verificationToken);
+    try {
+      await sendTransactionalEmail({
+        to: { email: user.email, name: user.displayName },
+        subject: "Verify your Portopedia email",
+        htmlContent: `<p>Hello ${user.displayName.replace(/[&<>"]/g, "")},</p><p>Verify your email address to activate your Portopedia account.</p><p><a href="${verificationUrl.href}">Verify email address</a></p><p>This link expires in 24 hours.</p>`,
+        textContent: `Hello ${user.displayName}, verify your Portopedia account: ${verificationUrl.href} (expires in 24 hours).`
+      });
+    } catch (emailError) {
+      await prisma.user.delete({ where: { id: user.id } });
+      request.log.error({ err: emailError }, "Could not send verification email");
+      response.status(503).json({ error: { code: "EMAIL_DELIVERY_FAILED", message: "We could not send the verification email. Please try again later." } });
+      return;
+    }
+    response.status(201).json({ message: "Account created. Check your email to verify your address." });
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
       response.status(409).json({ error: { code: "ACCOUNT_CONFLICT", message: "An account with those details already exists." } });
@@ -435,12 +455,17 @@ router.post("/login", authAttemptLimiter, async (request, response, next) => {
       select: { id: true, email: true, username: true, displayName: true, role: true, passwordHash: true, emailVerifiedAt: true }
     });
 
-    const valid = user?.passwordHash
-      ? await argon2.verify(user.passwordHash, parsed.data.password).catch(() => false)
-      : false;
+    const candidateHash = user?.passwordHash ?? await DUMMY_PASSWORD_HASH;
+    const passwordMatches = await argon2.verify(candidateHash, parsed.data.password).catch(() => false);
+    const valid = Boolean(user?.passwordHash && passwordMatches);
 
     if (!user || !valid) {
       response.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Email or password is incorrect." } });
+      return;
+    }
+
+    if (!user.emailVerifiedAt) {
+      response.status(403).json({ error: { code: "EMAIL_NOT_VERIFIED", message: "Verify your email address before signing in." } });
       return;
     }
 
