@@ -355,7 +355,8 @@ router.post("/verify-email", authAttemptLimiter, async (request, response, next)
         include: { user: { select: { id: true, email: true, username: true, displayName: true, role: true } } }
       });
       if (!token || token.type !== "VERIFY_EMAIL" || token.consumedAt || token.expiresAt <= new Date()) return null;
-      await tx.emailToken.update({ where: { id: token.id }, data: { consumedAt: new Date() } });
+      const consumed = await tx.emailToken.updateMany({ where: { id: token.id, consumedAt: null }, data: { consumedAt: new Date() } });
+      if (consumed.count !== 1) return null;
       await tx.user.update({ where: { id: token.userId }, data: { emailVerifiedAt: new Date() } });
       return token.user;
     });
@@ -385,12 +386,16 @@ router.post("/resend-verification", authAttemptLimiter, async (request, response
       const token = await createEmailToken(user.id, "VERIFY_EMAIL", 24 * 60 * 60 * 1000);
       const url = new URL("/verify-email", env.WEB_ORIGIN);
       url.searchParams.set("token", token);
-      await sendTransactionalEmail({
-        to: { email: user.email, name: user.displayName },
-        subject: "Verify your Portopedia email",
-        htmlContent: `<p><a href="${url.href}">Verify your Portopedia email</a></p><p>This link expires in 24 hours.</p>`,
-        textContent: `Verify your Portopedia email: ${url.href}`
-      });
+      try {
+        await sendTransactionalEmail({
+          to: { email: user.email, name: user.displayName },
+          subject: "Verify your Portopedia email",
+          htmlContent: `<p><a href="${url.href}">Verify your Portopedia email</a></p><p>This link expires in 24 hours.</p>`,
+          textContent: `Verify your Portopedia email: ${url.href}`
+        });
+      } catch (emailError) {
+        logger.warn({ err: emailError }, "Verification email delivery failed");
+      }
     }
     response.status(200).json({ message: "If the account needs verification, an email will be sent." });
   } catch (error) { next(error); }
@@ -413,12 +418,16 @@ router.post("/password-reset/request", authAttemptLimiter, async (request, respo
       const token = await createEmailToken(user.id, "PASSWORD_RESET", 60 * 60 * 1000);
       const url = new URL("/reset-password", env.WEB_ORIGIN);
       url.searchParams.set("token", token);
-      await sendTransactionalEmail({
-        to: { email: user.email, name: user.displayName },
-        subject: "Reset your Portopedia password",
-        htmlContent: `<p>Use this link to reset your Portopedia password:</p><p><a href="${url.href}">Reset password</a></p><p>This link expires in one hour.</p>`,
-        textContent: `Reset your Portopedia password: ${url.href} (expires in one hour).`
-      });
+      try {
+        await sendTransactionalEmail({
+          to: { email: user.email, name: user.displayName },
+          subject: "Reset your Portopedia password",
+          htmlContent: `<p>Use this link to reset your Portopedia password:</p><p><a href="${url.href}">Reset password</a></p><p>This link expires in one hour.</p>`,
+          textContent: `Reset your Portopedia password: ${url.href} (expires in one hour).`
+        });
+      } catch (emailError) {
+        logger.warn({ err: emailError }, "Password reset email delivery failed");
+      }
     }
     response.status(200).json({ message: "If an account exists for that address, password reset instructions will be sent." });
   } catch (error) { next(error); }
@@ -436,7 +445,8 @@ router.post("/password-reset/confirm", authAttemptLimiter, async (request, respo
     const changed = await prisma.$transaction(async (tx) => {
       const token = await tx.emailToken.findUnique({ where: { tokenHash: hashToken(parsed.data.token) } });
       if (!token || token.type !== "PASSWORD_RESET" || token.consumedAt || token.expiresAt <= new Date()) return false;
-      await tx.emailToken.update({ where: { id: token.id }, data: { consumedAt: new Date() } });
+      const consumed = await tx.emailToken.updateMany({ where: { id: token.id, consumedAt: null }, data: { consumedAt: new Date() } });
+      if (consumed.count !== 1) return false;
       await tx.user.update({ where: { id: token.userId }, data: { passwordHash } });
       await tx.session.deleteMany({ where: { userId: token.userId } });
       await tx.emailToken.deleteMany({ where: { userId: token.userId, type: "PASSWORD_RESET", id: { not: token.id } } });
