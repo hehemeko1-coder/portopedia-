@@ -5,6 +5,7 @@ import helmet from "helmet";
 import pinoHttp from "pino-http";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
+import { authRouter } from "./routes/auth.js";
 
 export const app = express();
 
@@ -51,6 +52,7 @@ api.get("/", (_request, response) => {
     documentation: "https://github.com/hehemeko1-coder/portopedia-/blob/main/docs/API.md"
   });
 });
+api.use("/auth", authRouter);
 app.use("/api/v1", api);
 
 app.use((_request, response) => {
