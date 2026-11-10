@@ -56,7 +56,26 @@ describe("HTTP application", () => {
     expect(response.status).toBe(403);
   });
 
-  it("requires configured credentials before starting Google sign-in", async () => {\n    const response = await fetch(`${baseUrl}/api/v1/auth/google`);\n    expect(response.status).toBe(503);\n  });\n\n  it("rejects malformed verification tokens before database access", async () => {\n    const response = await fetch(`${baseUrl}/api/v1/auth/verify-email`, {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ token: "short" })\n    });\n    expect(response.status).toBe(400);\n  });\n\n  it("rejects unauthenticated asset access", async () => {\n    const response = await fetch(`${baseUrl}/api/v1/assets`);\n    expect(response.status).toBe(401);\n  });\n\n  it("returns a consistent not-found response for unknown routes", async () => {
+  it("requires configured credentials before starting Google sign-in", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/auth/google`);
+    expect(response.status).toBe(503);
+  });
+
+  it("rejects malformed verification tokens before database access", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: "short" })
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects unauthenticated asset access", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/assets`);
+    expect(response.status).toBe(401);
+  });
+
+  it("returns a consistent not-found response for unknown routes", async () => {
     const response = await fetch(`${baseUrl}/api/v1/not-a-route`);
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
