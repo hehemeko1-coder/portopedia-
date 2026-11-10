@@ -16,22 +16,34 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  const url = new URL(event.request.url);
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("/")));
+
+  if (request.mode === "navigate") {
+    event.respondWith(fetch(request).catch(() => caches.match("/")));
     return;
   }
+
+  const isStaticAsset =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname === "/manifest.webmanifest" ||
+    url.pathname.startsWith("/icons/");
+
+  if (!isStaticAsset) return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) =>
-      cached || fetch(event.request).then((response) => {
-        if (response.ok) {
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response.ok && response.type === "basic") {
           const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
-      })
-    )
+      });
+    })
   );
 });
