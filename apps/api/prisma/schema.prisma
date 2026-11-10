@@ -137,3 +137,17 @@ model Asset {
   @@index([projectId])
   @@index([status, createdAt])
 }
+
+model EmailToken {
+  id         String         @id @default(cuid())
+  userId     String
+  tokenHash  String         @unique
+  type       EmailTokenType
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime       @default(now())
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, expiresAt])
+  @@index([expiresAt])
+}
