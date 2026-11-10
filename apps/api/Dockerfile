@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package.json
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN npm install
+RUN npm install --no-audit --no-fund
 
 COPY . .
 RUN npm run db:generate && npm run build --workspace=@portopedia/api
