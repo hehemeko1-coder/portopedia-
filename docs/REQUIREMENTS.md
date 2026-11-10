@@ -15,7 +15,7 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Portfolio creation and editing | Default portfolio on account creation; owner-scoped read and update routes | Implemented; integration tests pending |
 | Project publishing and visibility | Owner-scoped CRUD, search, pagination, private/public state and published public listing | Implemented; integration tests pending |
 | Creator media uploads | R2 presigned upload, ownership validation, object metadata verification and deletion | Implemented; R2 credentials and public domain required |
-| Administration dashboard | Administrator role in user model | Not implemented |
+| Administration dashboard | Role-gated metrics API, creator directory, and verified-account bootstrap seed | Implemented; initial administrator must be configured |
 | Brevo transactional email | Provider-backed verification and password recovery messages | Implemented; Brevo credentials and sender verification required |
 
 ## Engineering requirements
@@ -25,7 +25,7 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Next.js, React, TypeScript and Tailwind CSS | Web workspace | Implemented |
 | Node.js, Express and TypeScript | API workspace | Implemented |
 | PostgreSQL and Prisma | Schema and initial migration | Foundation implemented |
-| Cloudflare R2 | Environment contract | Not implemented |
+| Cloudflare R2 | S3-compatible client, presigned uploads, signature verification, asset ownership and deletion | Implemented; R2 credentials, bucket CORS and public domain configuration required |
 | Render hosting | Blueprint for web and API services | Configured; external service deployment pending |
 | Versioned REST API | `/api/v1` route base | Foundation implemented |
 | Validation, rate limiting, logging and error handling | Zod environment validation, global rate limit, Pino request logs and JSON error handling | Foundation implemented; per-feature validation pending |
