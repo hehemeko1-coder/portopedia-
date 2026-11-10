@@ -324,7 +324,7 @@ router.post("/register", authAttemptLimiter, async (request, response, next) => 
     response.status(201).json({ message: "Account created. Check your email to verify your address." });
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
-      response.status(409).json({ error: { code: "ACCOUNT_CONFLICT", message: "An account with those details already exists." } });
+      response.status(202).json({ message: "If the account details are available, verification instructions will be sent." });
       return;
     }
     next(error);
