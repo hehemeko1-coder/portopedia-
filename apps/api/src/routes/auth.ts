@@ -9,13 +9,13 @@ import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 
 const router = Router();
-router.use(rateLimit({
+const authAttemptLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 12,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: { code: "AUTH_RATE_LIMITED", message: "Too many authentication attempts. Try again later." } }
-}));
+});
 const SESSION_COOKIE = "portopedia_session";
 const OAUTH_STATE_COOKIE = "portopedia_oauth_state";
 const OAUTH_NONCE_COOKIE = "portopedia_oauth_nonce";
@@ -160,7 +160,7 @@ export async function requireAuth(request: Request, response: Response, next: Ne
 }
 
 
-router.get("/google", async (_request, response, next) => {
+router.get("/google", authAttemptLimiter, async (_request, response, next) => {
   try {
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
       response.status(503).json({ error: { code: "OAUTH_NOT_CONFIGURED", message: "Google sign-in is not configured." } });
@@ -251,7 +251,7 @@ router.get("/google/callback", async (request, response, next) => {
   }
 });
 
-router.post("/register", async (request, response, next) => {
+router.post("/register", authAttemptLimiter, async (request, response, next) => {
   if (!assertTrustedOrigin(request, response)) return;
   const parsed = registerSchema.safeParse(request.body);
   if (!parsed.success) {
@@ -293,7 +293,7 @@ router.post("/register", async (request, response, next) => {
   }
 });
 
-router.post("/login", async (request, response, next) => {
+router.post("/login", authAttemptLimiter, async (request, response, next) => {
   if (!assertTrustedOrigin(request, response)) return;
   const parsed = loginSchema.safeParse(request.body);
   if (!parsed.success) {
