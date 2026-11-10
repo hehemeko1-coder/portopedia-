@@ -1,4 +1,9 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+if (process.env.NODE_ENV === "production" && !configuredApiUrl) {
+  throw new Error("NEXT_PUBLIC_API_URL must be configured for production builds.");
+}
+
+export const API_URL = (configuredApiUrl || "http://localhost:4000").replace(/\/$/, "");
 
 export type ApiError = {
   error?: { code?: string; message?: string; details?: unknown };
