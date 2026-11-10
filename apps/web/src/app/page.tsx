@@ -27,7 +27,7 @@ export default function HomePage() {
   return (
     <main className="site-shell">
       <header className="site-header">
-        <a className="wordmark" href="/" aria-label="Portopedia home">porto<span>pedia</span><b>.</b></a>
+        <Link className="wordmark" href="/" aria-label="Portopedia home">porto<span>pedia</span><b>.</b></Link>
         <nav className="nav-links" aria-label="Main navigation">
           <a href="#about">About</a>
           <a href="#features">Platform</a>
@@ -85,7 +85,7 @@ export default function HomePage() {
       </section>
 
       <footer className="site-footer">
-        <a className="wordmark" href="/">porto<span>pedia</span><b>.</b></a>
+        <Link className="wordmark" href="/">porto<span>pedia</span><b>.</b></Link>
         <span>© {new Date().getFullYear()} Portopedia. Made for people who make things.</span>
         <span>Independent by design.</span>
       </footer>
