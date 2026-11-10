@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, type AuthenticatedRequest } from "./auth.js";
@@ -69,7 +70,7 @@ router.post("/", requireAuth, async (request, response, next) => {
       return;
     }
     const baseSlug = toSlug(parsed.data.title);
-    const slug = `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`;
+    const slug = `${baseSlug}-${randomUUID().slice(0, 8)}`;
     const project = await prisma.project.create({
       data: { ...parsed.data, slug, portfolioId: portfolio.id }
     });
