@@ -27,6 +27,11 @@ enum OAuthProvider {
   GOOGLE
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id              String       @id @default(cuid())
   email           String       @unique
@@ -34,6 +39,7 @@ model User {
   displayName     String
   username        String       @unique
   passwordHash    String?
+  role            UserRole     @default(USER)
   avatarAssetId   String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
