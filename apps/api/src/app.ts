@@ -48,7 +48,7 @@ api.get("/", (_request, response) => {
   response.status(200).json({
     name: "Portopedia API",
     version: "1",
-    documentation: "/docs/api"
+    documentation: "https://github.com/hehemeko1-coder/portopedia-/blob/main/docs/API.md"
   });
 });
 app.use("/api/v1", api);
