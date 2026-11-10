@@ -18,6 +18,7 @@ WORKDIR /app
 
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build /app/apps/web/next.config.ts ./apps/web/next.config.ts
 COPY --from=build /app/apps/web/public ./apps/web/public
