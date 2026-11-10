@@ -41,6 +41,43 @@ export function ForgotPasswordForm() {
   );
 }
 
+export function ResendVerificationForm() {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError(""); setMessage("");
+    try {
+      const result = await apiRequest<{ message: string }>("/auth/resend-verification", {
+        method: "POST", body: JSON.stringify({ email })
+      });
+      setMessage(result.message);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to resend verification.");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <main className="auth-page">
+      <header className="auth-header"><Link className="wordmark" href="/">porto<span>pedia</span><b>.</b></Link><span className="eyebrow">ACCOUNT VERIFICATION</span></header>
+      <section className="auth-panel">
+        <p className="eyebrow">DID NOT GET THE EMAIL?</p><h1>TRY AGAIN.</h1>
+        <p className="auth-intro">Enter your email and we will send a fresh verification link if your account needs one.</p>
+        <form className="auth-form" onSubmit={submit}>
+          <label htmlFor="verification-email">Email address</label>
+          <input id="verification-email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} />
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {message && <p className="form-success" role="status">{message}</p>}
+          <button className="button-primary auth-submit" type="submit" disabled={busy}>{busy ? "Sending…" : "Resend verification"}</button>
+        </form>
+        <p className="auth-switch"><Link href="/login">Back to sign in</Link></p>
+      </section>
+    </main>
+  );
+}
+
 export function ResetPasswordForm({ token }: { token: string }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
