@@ -28,6 +28,34 @@ describe("HTTP application", () => {
     await expect(response.json()).resolves.toEqual({ status: "ok" });
   });
 
+  it("rejects unauthenticated access to private portfolio and project resources", async () => {
+    const portfolioResponse = await fetch(`${baseUrl}/api/v1/portfolios/me`);
+    const projectResponse = await fetch(`${baseUrl}/api/v1/projects`);
+    expect(portfolioResponse.status).toBe(401);
+    expect(projectResponse.status).toBe(401);
+  });
+
+  it("validates login payloads before attempting database access", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "not-an-email", password: "" })
+    });
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "VALIDATION_ERROR" }
+    });
+  });
+
+  it("rejects cross-origin authentication mutations", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Origin": "https://attacker.example" },
+      body: JSON.stringify({ email: "creator@example.com", username: "creator", displayName: "Creator", password: "a-secure-password-123" })
+    });
+    expect(response.status).toBe(403);
+  });
+
   it("returns a consistent not-found response for unknown routes", async () => {
     const response = await fetch(`${baseUrl}/api/v1/not-a-route`);
     expect(response.status).toBe(404);
