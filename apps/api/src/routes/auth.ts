@@ -132,7 +132,7 @@ export type AuthenticatedRequest = Request & {
   };
 };
 
-export async function requireAuth(request: Request, response: Response, next: NextFunction) {
+export async function requireAdmin(request: Request, response: Response, next: NextFunction) {\n  const user = (request as AuthenticatedRequest).authUser;\n  if (!user || user.role !== "ADMIN") {\n    response.status(403).json({ error: { code: "FORBIDDEN", message: "Administrator access is required." } });\n    return;\n  }\n  next();\n}\n\nexport async function requireAuth(request: Request, response: Response, next: NextFunction) {
   try {
     const token = readSessionToken(request);
     if (!token || token.length > 128) {
