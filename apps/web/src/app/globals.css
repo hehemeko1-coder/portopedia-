@@ -88,3 +88,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .theme-toggle { width: 42px; height: 42px; display: inline-grid; place-items: center; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
 .theme-toggle:hover { background: var(--accent); color: #171717; border-color: var(--accent); }
+
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
