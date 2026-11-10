@@ -29,7 +29,7 @@ Verify the sender domain or sender email in Brevo. Set `BREVO_API_KEY`, `BREVO_S
 2. Create or connect a Render workspace.
 3. Create a Render Blueprint from this repository and review the planned services.
 4. Provision the managed PostgreSQL database.
-5. Set `DATABASE_URL` on the API service using the provider's pooled or direct connection string as appropriate for migrations.
+5. Set `DATABASE_URL` on the API service using the provider's direct/unpooled connection string. This repository uses the same `DATABASE_URL` for Prisma Client and migration deployment.
 6. Set `WEB_ORIGIN` on the API service to the deployed web origin.
 7. Set `NEXT_PUBLIC_API_URL` on the web service to the deployed API origin.
 8. Add Google OAuth, R2 and Brevo environment variables.
