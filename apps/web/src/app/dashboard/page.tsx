@@ -141,7 +141,8 @@ export default function DashboardPage() {
       setError(cause instanceof Error ? cause.message : "Unable to upload project cover.");
     } finally { setBusy(false); }
   }
-\n  async function togglePortfolio() {
+
+  async function togglePortfolio() {
     if (!portfolio) return;
     setBusy(true); setError(""); setNotice("");
     try {
