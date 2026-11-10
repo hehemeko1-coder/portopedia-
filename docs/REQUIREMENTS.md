@@ -10,11 +10,11 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Responsive, accessible, SEO-friendly web experience | Next.js App Router, responsive landing page, metadata and semantic structure | Foundation complete; full product accessibility audit pending |
 | Playful brutalist visual direction | Portopedia design system and landing page | Foundation complete |
 | PWA support | Web manifest, service worker and registration | Foundation complete; device install/offline QA pending |
-| Email/password authentication | User credential field and session model | Not implemented |
-| Google OAuth | OAuth identity model and environment contract | Not implemented |
-| Portfolio creation and editing | Portfolio model | Not implemented |
-| Project publishing and visibility | Project model and visibility enums | Not implemented |
-| Creator media uploads | Asset metadata model and R2 configuration contract | Not implemented |
+| Email/password authentication | Argon2id password hashing, registration, login, logout and server-side sessions | Implemented; integration tests pending |
+| Google OAuth | OpenID Connect authorization-code flow with PKCE, state and nonce validation | Implemented; provider credentials and callback configuration required |
+| Portfolio creation and editing | Default portfolio on account creation; owner-scoped read and update routes | Implemented; integration tests pending |
+| Project publishing and visibility | Owner-scoped CRUD, search, pagination, private/public state and published public listing | Implemented; integration tests pending |
+| Creator media uploads | R2 presigned upload, ownership validation, object metadata verification and deletion | Implemented; R2 credentials and public domain required |
 | Administration dashboard | Administrator role in user model | Not implemented |
 | Brevo transactional email | Environment contract | Not implemented |
 
@@ -29,7 +29,7 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Render hosting | Blueprint for web and API services | Configured; external service deployment pending |
 | Versioned REST API | `/api/v1` route base | Foundation implemented |
 | Validation, rate limiting, logging and error handling | Zod environment validation, global rate limit, Pino request logs and JSON error handling | Foundation implemented; per-feature validation pending |
-| Authentication and authorization middleware | Session and role data model | Not implemented |
+| Authentication and authorization middleware | Hashed opaque sessions, cookie middleware and owner-scoped resource queries | Implemented; security review pending |
 | Secure cookies and password hashing | Security design documented | Not implemented |
 | Automated tests | API liveness and not-found tests | Foundation tests added; feature coverage pending |
 | Docker support | Local PostgreSQL Docker Compose service | Foundation implemented; application container images pending |
