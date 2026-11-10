@@ -6,7 +6,7 @@ import { ArrowUpRight, ExternalLink, LogOut, Plus, Save, Trash2 } from "lucide-r
 import { apiRequest } from "@/lib/api";
 
 type User = { id: string; email: string; username: string; displayName: string; role: "USER" | "ADMIN" };
-type Project = { id: string; title: string; slug: string; summary: string | null; description: string | null; visibility: "PRIVATE" | "PUBLIC"; sortOrder: number; publishedAt: string | null };
+type Project = { id: string; title: string; slug: string; summary: string | null; description: string | null; visibility: "PRIVATE" | "PUBLIC"; sortOrder: number; publishedAt: string | null; coverAssetId?: string | null };
 type Portfolio = { id: string; title: string; headline: string | null; biography: string | null; location: string | null; websiteUrl: string | null; visibility: "PRIVATE" | "PUBLIC"; publishedAt: string | null };
 
 export default function DashboardPage() {
@@ -113,7 +113,35 @@ export default function DashboardPage() {
     }
   }
 
-  async function togglePortfolio() {
+
+  async function uploadProjectCover(project: Project, file: File) {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+    if (!allowed.includes(file.type)) { setError("Choose a JPG, PNG, WebP, AVIF or GIF image."); return; }
+    if (file.size > 20 * 1024 * 1024) { setError("Cover images must be 20 MB or smaller."); return; }
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const signed = await apiRequest<{ asset: { id: string }; uploadUrl: string }>("/assets/presign", {
+        method: "POST",
+        body: JSON.stringify({ fileName: file.name, mimeType: file.type, sizeBytes: file.size, projectId: project.id })
+      });
+      const upload = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file
+      });
+      if (!upload.ok) throw new Error("The file could not be uploaded to storage.");
+      await apiRequest("/assets/" + signed.asset.id + "/complete", { method: "POST" });
+      const updated = await apiRequest<{ project: Project }>("/projects/" + project.id, {
+        method: "PATCH",
+        body: JSON.stringify({ coverAssetId: signed.asset.id })
+      });
+      setProjects((current) => current.map((item) => item.id === project.id ? updated.project : item));
+      setNotice("Project cover uploaded.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to upload project cover.");
+    } finally { setBusy(false); }
+  }
+\n  async function togglePortfolio() {
     if (!portfolio) return;
     setBusy(true); setError(""); setNotice("");
     try {
