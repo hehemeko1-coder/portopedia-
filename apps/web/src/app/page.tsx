@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Asterisk, Layers3, ScanFace, Sparkles } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 
 const capabilities = [
   {
@@ -26,6 +27,7 @@ export default function HomePage() {
     <main className="site-shell">
       <header className="site-header">
         <a className="wordmark" href="/" aria-label="Portopedia home">porto<span>pedia</span><b>.</b></a>
+        <ThemeToggle />
         <nav className="nav-links" aria-label="Main navigation">
           <a href="#about">About</a>
           <a href="#features">Platform</a>
