@@ -2,7 +2,7 @@ import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
-import { requireAuth, type AuthenticatedRequest } from "./auth.js";
+import { requireAuth, requireTrustedOrigin, type AuthenticatedRequest } from "./auth.js";
 
 const router = Router();
 
@@ -57,7 +57,7 @@ router.get("/", requireAuth, async (request, response, next) => {
   }
 });
 
-router.post("/", requireAuth, async (request, response, next) => {
+router.post("/", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   const parsed = createProjectSchema.safeParse(request.body);
   if (!parsed.success) {
     response.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Check the project details.", details: parsed.error.flatten().fieldErrors } });
@@ -81,7 +81,7 @@ router.post("/", requireAuth, async (request, response, next) => {
   }
 });
 
-router.patch("/:id", requireAuth, async (request, response, next) => {
+router.patch("/:id", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   const id = z.string().min(1).max(64).safeParse(request.params.id);
   const parsed = updateProjectSchema.safeParse(request.body);
   if (!id.success || !parsed.success || Object.keys(parsed.data ?? {}).length === 0) {
@@ -120,7 +120,7 @@ router.patch("/:id", requireAuth, async (request, response, next) => {
   }
 });
 
-router.delete("/:id", requireAuth, async (request, response, next) => {
+router.delete("/:id", requireTrustedOrigin, requireAuth, async (request, response, next) => {
   const id = z.string().min(1).max(64).safeParse(request.params.id);
   if (!id.success) {
     response.status(400).json({ error: { code: "INVALID_PROJECT_ID", message: "Invalid project ID." } });
