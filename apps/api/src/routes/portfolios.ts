@@ -129,8 +129,19 @@ router.get("/:username", async (request, response, next) => {
       response.status(404).json({ error: { code: "PORTFOLIO_NOT_FOUND", message: "Portfolio not found." } });
       return;
     }
+    const result = {
+      ...portfolio,
+      user: {
+        ...portfolio.user,
+        avatarUrl: portfolio.user.avatarAsset?.storageKey ? publicAssetUrl(portfolio.user.avatarAsset.storageKey) : null
+      },
+      projects: portfolio.projects.map((project) => ({
+        ...project,
+        coverUrl: project.coverAsset?.storageKey ? publicAssetUrl(project.coverAsset.storageKey) : null
+      }))
+    };
     response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-    response.status(200).json({ portfolio });
+    response.status(200).json({ portfolio: result });
   } catch (error) {
     next(error);
   }
