@@ -9,8 +9,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate deploy",
+    "db:generate": "npx --yes prisma@6.19.0 generate",
+    "db:migrate": "npx --yes prisma@6.19.0 migrate deploy",
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
