@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../lib/prisma.js";\nimport { publicAssetUrl } from "../lib/storage.js";
+import { prisma } from "../lib/prisma.js";
+import { publicAssetUrl } from "../lib/storage.js";
 import { requireAuth, type AuthenticatedRequest } from "./auth.js";
 
 const router = Router();
