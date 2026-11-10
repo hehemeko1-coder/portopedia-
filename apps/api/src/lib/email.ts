@@ -1,5 +1,3 @@
-import { env } from "../config/env.js";
-
 type EmailMessage = {
   to: { email: string; name?: string };
   subject: string;
