@@ -8,6 +8,7 @@ import { parse, serialize } from "cookie";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { isEmailDeliveryConfigured, sendTransactionalEmail } from "../lib/email.js";
+import { logger } from "../lib/logger.js";
 
 const router = Router();
 const authAttemptLimiter = rateLimit({
@@ -227,6 +228,10 @@ router.get("/google/callback", async (request, response, next) => {
       expectedNonce: nonce
     });
     const claims = tokens.claims();
+    if (!claims) {
+      response.status(401).json({ error: { code: "OAUTH_CLAIMS_MISSING", message: "Google did not return a valid identity." } });
+      return;
+    }
     const email = typeof claims.email === "string" ? claims.email.toLowerCase() : "";
     const providerAccountId = typeof claims.sub === "string" ? claims.sub : "";
     const displayName = typeof claims.name === "string" ? claims.name : email.split("@")[0] || "Creator";
@@ -317,7 +322,7 @@ router.post("/register", authAttemptLimiter, async (request, response, next) => 
       });
     } catch (emailError) {
       await prisma.user.delete({ where: { id: user.id } });
-      request.log.error({ err: emailError }, "Could not send verification email");
+      logger.error({ err: emailError }, "Could not send verification email");
       response.status(503).json({ error: { code: "EMAIL_DELIVERY_FAILED", message: "We could not send the verification email. Please try again later." } });
       return;
     }
