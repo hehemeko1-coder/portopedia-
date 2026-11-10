@@ -11,7 +11,10 @@ const updatePortfolioSchema = z.object({
   headline: z.string().trim().max(160).nullable().optional(),
   biography: z.string().trim().max(5000).nullable().optional(),
   location: z.string().trim().max(120).nullable().optional(),
-  websiteUrl: z.string().trim().url().max(2048).nullable().optional()
+  websiteUrl: z.string().trim().url().max(2048).refine((value) => {
+    const protocol = new URL(value).protocol;
+    return protocol === "http:" || protocol === "https:";
+  }, "Website URLs must use HTTP or HTTPS.").nullable().optional()
 }).strict();
 
 router.get("/me", requireAuth, async (request, response, next) => {
