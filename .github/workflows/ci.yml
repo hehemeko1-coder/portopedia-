@@ -51,3 +51,7 @@ jobs:
         run: npm run lint
       - name: Build production applications
         run: npm run build
+      - name: Validate Docker Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
