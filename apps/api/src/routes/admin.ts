@@ -49,7 +49,6 @@ router.get("/users", async (request, response, next) => {
         select: {
           id: true, email: true, username: true, displayName: true,
           role: true, emailVerifiedAt: true, createdAt: true,
-          _count: { select: { projects: false } }
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
