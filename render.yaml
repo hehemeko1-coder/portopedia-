@@ -3,7 +3,7 @@ services:
     name: portopedia-api
     runtime: node
     plan: starter
-    buildCommand: npm install && npm run db:generate --workspace=@portopedia/api && npm run db:migrate --workspace=@portopedia/api && npm run build --workspace=@portopedia/api
+    buildCommand: npm install && npm run db:generate --workspace=@portopedia/api && npm run db:migrate --workspace=@portopedia/api && npm run build --workspace=@portopedia/api && npm prune --omit=dev
     startCommand: npm run start --workspace=@portopedia/api
     healthCheckPath: /health/ready
     envVars:
@@ -48,7 +48,7 @@ services:
     name: portopedia-web
     runtime: node
     plan: starter
-    buildCommand: npm install && npm run build --workspace=@portopedia/web
+    buildCommand: npm install && npm run build --workspace=@portopedia/web && npm prune --omit=dev
     startCommand: npm run start --workspace=@portopedia/web
     envVars:
       - key: NODE_ENV
