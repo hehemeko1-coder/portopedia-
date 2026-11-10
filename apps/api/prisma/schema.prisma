@@ -32,6 +32,11 @@ enum UserRole {
   ADMIN
 }
 
+enum EmailTokenType {
+  VERIFY_EMAIL
+  PASSWORD_RESET
+}
+
 model User {
   id              String       @id @default(cuid())
   email           String       @unique
@@ -46,6 +51,7 @@ model User {
   portfolio       Portfolio?
   sessions        Session[]
   oauthAccounts   OAuthAccount[]
+  emailTokens     EmailToken[]
   assets          Asset[]      @relation("UserAssets")
   avatarAsset     Asset?       @relation("UserAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
 
