@@ -1,0 +1,23 @@
+{
+  "name": "portopedia",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/web", "apps/api"],
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c cyan,green \"npm:dev --workspace=@portopedia/web\" \"npm:dev --workspace=@portopedia/api\"",
+    "build": "npm run build --workspace=@portopedia/api && npm run build --workspace=@portopedia/web",
+    "typecheck": "npm run typecheck --workspace=@portopedia/api && npm run typecheck --workspace=@portopedia/web",
+    "lint": "npm run lint --workspace=@portopedia/web",
+    "test": "npm run test --workspace=@portopedia/api",
+    "db:generate": "npm run db:generate --workspace=@portopedia/api",
+    "db:migrate": "npm run db:migrate --workspace=@portopedia/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10.0.0"
+  }
+}
