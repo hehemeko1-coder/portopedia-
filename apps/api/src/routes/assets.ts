@@ -7,7 +7,7 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 import { isObjectStorageConfigured, publicAssetUrl, r2Client } from "../lib/storage.js";
-import { requireAuth, type AuthenticatedRequest } from "./auth.js";
+import { requireAuth, requireTrustedOrigin, type AuthenticatedRequest } from "./auth.js";
 
 const router = Router();
 const allowedTypes = new Map([
@@ -29,7 +29,7 @@ const presignSchema = z.object({
   projectId: z.string().min(1).max(64).optional()
 }).strict();
 
-router.use(requireAuth);
+router.use(requireTrustedOrigin, requireAuth);
 
 router.post("/presign", async (request, response, next) => {
   const parsed = presignSchema.safeParse(request.body);
