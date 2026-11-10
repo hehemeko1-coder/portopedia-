@@ -2,7 +2,6 @@ import { DeleteObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-s
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
-import { extname } from "node:path";
 import { z } from "zod";
 import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
