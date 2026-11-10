@@ -23,6 +23,8 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: portopedia-api
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       API_PORT: 4000
