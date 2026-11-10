@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowUpRight, ExternalLink, LogOut, Plus, Save, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
@@ -10,6 +11,7 @@ type Project = { id: string; title: string; slug: string; summary: string | null
 type Portfolio = { id: string; title: string; headline: string | null; biography: string | null; location: string | null; websiteUrl: string | null; visibility: "PRIVATE" | "PUBLIC"; publishedAt: string | null };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -37,7 +39,7 @@ export default function DashboardPage() {
         if (!active) return;
         const message = cause instanceof Error ? cause.message : "Unable to load your workspace.";
         if (message.toLowerCase().includes("sign in")) {
-          window.location.replace("/login");
+          router.replace("/login");
           return;
         }
         setError(message);
@@ -47,7 +49,7 @@ export default function DashboardPage() {
     }
     void load();
     return () => { active = false; };
-  }, []);
+  }, [router]);
 
   async function savePortfolio(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,7 +159,7 @@ export default function DashboardPage() {
 
   async function logout() {
     try { await apiRequest<void>("/auth/logout", { method: "POST" }); }
-    finally { window.location.assign("/"); }
+    finally { router.push("/"); }
   }
 
   if (loading) return <main className="dashboard-loading"><span className="eyebrow">PORTOPEDIA / WORKSPACE</span><p>Opening your workspace…</p></main>;
@@ -205,6 +207,7 @@ export default function DashboardPage() {
               <article className="project-row" key={project.id}>
                 <div className="project-row-main"><strong>{project.title}</strong><p>{project.summary || "No description yet."}</p><span>{project.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}</span></div>
                 <div className="project-row-actions">
+                  <label className="project-cover-upload">Cover<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadProjectCover(project, file); event.currentTarget.value = ""; }} /></label>
                   <button type="button" onClick={() => toggleProject(project)}>{project.visibility === "PUBLIC" ? "Make private" : "Publish"}</button>
                   <button type="button" className="danger-action" onClick={() => deleteProject(project)} aria-label={"Delete " + project.title}><Trash2 size={15} /></button>
                 </div>
