@@ -12,8 +12,9 @@ export function ThemeToggle() {
     const stored = window.localStorage.getItem("portopedia-theme");
     const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     const initial: Theme = stored === "dark" || stored === "light" ? stored : preferred;
-    setTheme(initial);
     document.documentElement.dataset.theme = initial;
+    const frame = window.requestAnimationFrame(() => setTheme(initial));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function toggleTheme() {
