@@ -111,6 +111,10 @@ function assertTrustedOrigin(request: Request, response: Response): boolean {
   return true;
 }
 
+export function requireTrustedOrigin(request: Request, response: Response, next: NextFunction) {
+  if (assertTrustedOrigin(request, response)) next();
+}
+
 async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {
   const token = randomBytes(32).toString("base64url");
   await prisma.emailToken.deleteMany({ where: { userId, type } });
