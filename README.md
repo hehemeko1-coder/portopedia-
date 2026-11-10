@@ -39,7 +39,7 @@ render.yaml
 7. Apply migrations: `npm run db:migrate`.
 8. Start web and API: `npm run dev`.\n\nTo run the complete containerized stack instead, copy `.env.example` to `.env`, set the required database and provider variables, then run `docker compose up --build`. The local web app is served on port 3000 and the API on port 4000.
 
-The web app defaults to http://localhost:3000 and the API to http://localhost:4000.
+The web app defaults to http://localhost:3000 and the API to http://localhost:4000.\n\n## First administrator\n\nAfter registering and verifying the account that should administer the platform, set `BOOTSTRAP_ADMIN_EMAIL` to that account's email in the API environment and run `npm run db:seed --workspace=@portopedia/api` once. The seed only promotes an existing verified account; it cannot create an administrator from an arbitrary email address.
 
 ## Quality checks
 
