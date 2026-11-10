@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: "A home for independent creators to present their work, shape their identity, and publish a portfolio on their own terms.",
   applicationName: "Portopedia",
   manifest: "/manifest.webmanifest",
+  icons: { icon: "/icons/icon.svg", apple: "/icons/icon.svg" },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Portopedia" },
   openGraph: {
     title: "Portopedia — Your work, unmistakably yours",
