@@ -10,13 +10,13 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Responsive, accessible, SEO-friendly web experience | Next.js App Router, responsive landing page, metadata and semantic structure | Foundation complete; full product accessibility audit pending |
 | Playful brutalist visual direction | Portopedia design system and landing page | Foundation complete |
 | PWA support | Web manifest, service worker and registration | Foundation complete; device install/offline QA pending |
-| Email/password authentication | Argon2id password hashing, registration, login, logout and server-side sessions | Implemented; integration tests pending |
+| Email/password authentication | Argon2id password hashing, email verification, login, logout, password reset and server-side sessions | Implemented; integration tests pending |
 | Google OAuth | OpenID Connect authorization-code flow with PKCE, state and nonce validation | Implemented; provider credentials and callback configuration required |
 | Portfolio creation and editing | Default portfolio on account creation; owner-scoped read and update routes | Implemented; integration tests pending |
 | Project publishing and visibility | Owner-scoped CRUD, search, pagination, private/public state and published public listing | Implemented; integration tests pending |
 | Creator media uploads | R2 presigned upload, ownership validation, object metadata verification and deletion | Implemented; R2 credentials and public domain required |
 | Administration dashboard | Administrator role in user model | Not implemented |
-| Brevo transactional email | Environment contract | Not implemented |
+| Brevo transactional email | Provider-backed verification and password recovery messages | Implemented; Brevo credentials and sender verification required |
 
 ## Engineering requirements
 
@@ -32,7 +32,7 @@ This matrix combines the Portopedia Master AI Engineering Prompt with the suppli
 | Authentication and authorization middleware | Hashed opaque sessions, cookie middleware and owner-scoped resource queries | Implemented; security review pending |
 | Secure cookies and password hashing | Security design documented | Not implemented |
 | Automated tests | API liveness and not-found tests | Foundation tests added; feature coverage pending |
-| Docker support | Local PostgreSQL Docker Compose service | Foundation implemented; application container images pending |
+| Docker support | PostgreSQL, API and web production containers with Compose health dependencies | Implemented; local Docker build verification pending |
 | Documentation | Architecture, database, API, security, deployment, development and this matrix | Foundation implemented |
 | CI | GitHub Actions workflow | Added; passing run required |
 | No secrets in source control | Environment template and ignore rules | Implemented |
