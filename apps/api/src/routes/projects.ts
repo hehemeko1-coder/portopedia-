@@ -98,6 +98,16 @@ router.patch("/:id", requireAuth, async (request, response, next) => {
       response.status(404).json({ error: { code: "PROJECT_NOT_FOUND", message: "Project not found." } });
       return;
     }
+    if (parsed.data.coverAssetId) {
+      const cover = await prisma.asset.findFirst({
+        where: { id: parsed.data.coverAssetId, ownerId: user.id, projectId: owned.id, status: "READY" },
+        select: { id: true }
+      });
+      if (!cover) {
+        response.status(400).json({ error: { code: "INVALID_COVER_ASSET", message: "Choose a completed image upload attached to this project." } });
+        return;
+      }
+    }
     const data = {
       ...parsed.data,
       ...(parsed.data.visibility === "PUBLIC" ? { publishedAt: owned.publishedAt ?? new Date() } : {}),
