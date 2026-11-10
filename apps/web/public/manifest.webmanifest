@@ -1,0 +1,10 @@
+{
+  "name": "Portopedia",
+  "short_name": "Portopedia",
+  "description": "A home for independent creators to present and publish their work.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f1e9",
+  "theme_color": "#f4f1e9",
+  "icons": []
+}
