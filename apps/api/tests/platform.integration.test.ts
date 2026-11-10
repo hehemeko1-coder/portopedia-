@@ -96,6 +96,8 @@ describe("identity, ownership and publishing integration", () => {
 
     expect(registration.status).toBe(201);
     expect(registration.headers.get("set-cookie")).toBeNull();
+    const prematureLogin = await post("/api/v1/auth/login", { email: "verify@example.com", password: "correct-horse-battery-staple" }, "198.51.100.11");
+    expect(prematureLogin.status).toBe(403);
     expect(sendTransactionalEmail).toHaveBeenCalledTimes(1);
 
     const verification = await post("/api/v1/auth/verify-email", { token: emailToken() }, "198.51.100.11");
@@ -137,6 +139,8 @@ describe("identity, ownership and publishing integration", () => {
       password: "a-new-secure-password-456"
     }, "198.51.100.13");
     expect(reset.status).toBe(200);
+    const reusedToken = await post("/api/v1/auth/password-reset/confirm", { token: resetToken, password: "another-secure-password-789" }, "198.51.100.13");
+    expect(reusedToken.status).toBe(400);
 
     const oldSession = await fetch(baseUrl + "/api/v1/auth/me", { headers: { Cookie: account.cookie } });
     expect(oldSession.status).toBe(401);
@@ -197,6 +201,10 @@ describe("identity, ownership and publishing integration", () => {
   });
 
   it("restricts administrator metrics to accounts with the administrator role", async () => {
+    const regular = await createVerifiedUser("regular@example.com", "regular-creator", "198.51.100.17");
+    const denied = await fetch(baseUrl + "/api/v1/admin/overview", { headers: { Cookie: regular.cookie } });
+    expect(denied.status).toBe(403);
+
     const account = await createVerifiedUser("admin@example.com", "admin-creator", "198.51.100.16");
     await prisma.user.update({ where: { id: account.user.id }, data: { role: "ADMIN" } });
     const response = await fetch(baseUrl + "/api/v1/admin/overview", { headers: { Cookie: account.cookie } });
