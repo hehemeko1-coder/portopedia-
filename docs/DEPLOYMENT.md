@@ -9,7 +9,7 @@ The repository includes a Render Blueprint in `render.yaml` for separate web and
 - Google OAuth client and authorized callback URL
 - Brevo sender identity and API key
 
-## Deploy
+## Cloudflare R2 bucket configuration\n\nCreate an R2 bucket and an API token scoped to that bucket with object read/write/delete permissions. Set the four R2 credentials in the API service. Set `R2_PUBLIC_BASE_URL` to the custom public domain attached to the bucket if public portfolio images should render.\n\nConfigure bucket CORS to allow the deployed web origin to perform `PUT` uploads with the `Content-Type` request header. Allow `PUT` and `GET` from that exact origin; avoid wildcard origins when credentials or private assets are involved. The browser uploads directly to a short-lived signed URL, and the API verifies object size, declared MIME type and file signature before accepting it.\n\n## Deploy
 
 1. Push the repository to GitHub.
 2. Create or connect a Render workspace.
