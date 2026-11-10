@@ -74,7 +74,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
             {portfolio.projects.map((project, index) => (
               <article className="public-project" key={project.id}>
                 <span className="public-project-index">{String(index + 1).padStart(2, "0")} / PORTOPEDIA</span>
-                <h3>{project.title}</h3>
+                {project.coverUrl && <div className="public-project-cover" role="img" aria-label={project.title + " cover image"} style={{ backgroundImage: "url(" + project.coverUrl + ")" }} />}\n                <h3>{project.title}</h3>
                 {project.summary && <p>{project.summary}</p>}
                 {project.description && <p className="public-project-description">{project.description}</p>}
               </article>
