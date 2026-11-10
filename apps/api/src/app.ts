@@ -2,7 +2,7 @@ import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import pinoHttp from "pino-http";
+import { logger } from "./lib/logger.js";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
@@ -22,11 +22,15 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]
 }));
+app.use((request, response, next) => {
+  const startedAt = process.hrtime.bigint();
+  response.on("finish", () => {
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+    logger.info({ method: request.method, path: request.path, statusCode: response.statusCode, durationMs }, "HTTP request");
+  });
+  next();
+});
 app.use(express.json({ limit: "1mb", strict: true }));
-app.use(pinoHttp({
-  level: env.LOG_LEVEL,
-  redact: ["req.headers.authorization", "req.headers.cookie"]
-}));
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -70,7 +74,7 @@ app.use((_request, response) => {
 });
 
 const errorHandler: ErrorRequestHandler = (error: unknown, request, response, _next) => {
-  request.log.error({ err: error }, "Unhandled request error");
+  logger.error({ err: error, method: request.method, path: request.path }, "Unhandled request error");
   if (response.headersSent) return;
   response.status(500).json({
     error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." }
