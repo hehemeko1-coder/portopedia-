@@ -85,3 +85,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .manifesto h2 { margin-top: 28px; }
   .site-footer { flex-direction: column; }
 }
+
+.theme-toggle { width: 42px; height: 42px; display: inline-grid; place-items: center; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.theme-toggle:hover { background: var(--accent); color: #171717; border-color: var(--accent); }
