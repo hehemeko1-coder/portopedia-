@@ -79,7 +79,7 @@ export default function HomePage() {
       <section className="section" id="get-started">
         <div className="section-heading">
           <div><p className="eyebrow">Your next chapter starts here</p><h2>Make it<br />public.</h2></div>
-          <p>Portopedia is being built as a publishing home for independent creative work. The account, editor, and publishing flows are part of the implementation roadmap.</p>
+          <p>Create your account, shape your profile, add selected projects, and publish a public portfolio you can share with the world.</p>
         </div>
         <Link className="button-primary" href="/register">Create your portfolio <ArrowUpRight size={16} aria-hidden="true" /></Link>
       </section>
