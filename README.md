@@ -1,10 +1,21 @@
 # Portopedia
 
-Portopedia is a creator portfolio platform being built from the supplied Product Requirements Document and Master AI Engineering Prompt.
+Portopedia is a creator portfolio platform implemented as a TypeScript monorepo.
 
-## Product direction
+## Source-document scope
 
-The source documents establish a global creator portfolio platform with a responsive, accessible, SEO-friendly, installable experience and a playful brutalist visual direction. The required platform architecture includes creator identity, portfolio and project publishing, media storage, authentication, administration, and secure ownership-aware permissions.
+The uploaded file named `portopedia PDR.txt` identifies itself as a Master AI Engineering Prompt and refers to a separate Product Requirements Document. The other uploaded file is also an engineering prompt. Neither file contains a distinct product specification with complete user journeys, page requirements, role definitions, or acceptance criteria. This repository therefore implements the clearly supported creator-portfolio baseline and engineering requirements; it does not invent additional product scope.
+
+## Current product baseline
+
+- Creator registration, verified email, Google OAuth and secure account sessions
+- Creator profile editing and public/private portfolio publishing
+- Project creation, editing, deletion, visibility, search and pagination
+- Direct-to-R2 project cover uploads with file-signature verification
+- Public portfolio pages with project cover images
+- Administrator metrics and creator directory
+- Responsive landing, authentication and creator workspace experiences
+- PWA shell, dark/light theme and keyboard-focus support
 
 ## Technology
 
@@ -12,7 +23,7 @@ The source documents establish a global creator portfolio platform with a respon
 - API: Node.js, Express, TypeScript, versioned REST
 - Data: PostgreSQL and Prisma
 - Object storage: Cloudflare R2
-- Authentication: email/password and Google OAuth
+- Authentication: Argon2id email/password and Google OpenID Connect
 - Email delivery: Brevo
 - Hosting: Render
 
@@ -20,8 +31,8 @@ The source documents establish a global creator portfolio platform with a respon
 
 ```
 apps/
-  api/        Express API, Prisma schema and migrations
-  web/        Next.js App Router application and PWA shell
+  api/        Express API, routes, Prisma schema, migrations and tests
+  web/        Next.js App Router, account pages, dashboard and public portfolio
 docs/         Architecture, API, database, security and operations
 docker-compose.yml
 render.yaml
@@ -32,14 +43,29 @@ render.yaml
 
 1. Install Node.js 20.11+ and npm 10+.
 2. Copy `.env.example` to `.env`.
-3. Start PostgreSQL: `docker compose up -d postgres`.
+3. Start local PostgreSQL: `docker compose up -d postgres`.
 4. Set `DATABASE_URL=postgresql://portopedia:portopedia_local@localhost:5432/portopedia` in `.env`.
-5. Install dependencies: `npm install`.
-6. Generate Prisma Client: `npm run db:generate`.
-7. Apply migrations: `npm run db:migrate`.
-8. Start web and API: `npm run dev`.\n\nTo run the complete containerized stack instead, copy `.env.example` to `.env`, set the required database and provider variables, then run `docker compose up --build`. The local web app is served on port 3000 and the API on port 4000.
+5. Configure Brevo credentials and a verified sender to enable email/password registration.
+6. Install dependencies: `npm install`.
+7. Generate Prisma Client: `npm run db:generate`.
+8. Apply migrations: `npm run db:migrate`.
+9. Start web and API: `npm run dev`.
 
-The web app defaults to http://localhost:3000 and the API to http://localhost:4000.\n\n## First administrator\n\nAfter registering and verifying the account that should administer the platform, set `BOOTSTRAP_ADMIN_EMAIL` to that account's email in the API environment and run `npm run db:seed --workspace=@portopedia/api` once. The seed only promotes an existing verified account; it cannot create an administrator from an arbitrary email address.
+The web app defaults to http://localhost:3000 and the API to http://localhost:4000.
+
+## Docker
+
+Copy `.env.example` to `.env`, configure the required database and provider variables, then run:
+
+```bash
+docker compose up --build
+```
+
+The local web app is served on port 3000 and the API on port 4000.
+
+## First administrator
+
+After registering and verifying the account that should administer the platform, set `BOOTSTRAP_ADMIN_EMAIL` to that account's email in the API environment and run `npm run db:seed --workspace=@portopedia/api` once. The seed only promotes an existing verified account.
 
 ## Quality checks
 
@@ -50,8 +76,15 @@ npm test
 npm run build
 ```
 
-## Implementation status
+The CI workflow provisions PostgreSQL, applies migrations, type-checks both workspaces, runs API tests, lints the web app and builds both applications.
 
-The first implementation increment establishes the monorepo, public landing experience, PWA shell, API runtime and health checks, initial PostgreSQL schema and migration, Render blueprint, local PostgreSQL service, and engineering documentation.
+## External setup required before deployment
 
-Authentication, Google OAuth, portfolio management, project publishing, R2 upload workflows, Brevo delivery, administration, and end-to-end feature tests must be completed and verified before production use. External services require credentials supplied through environment variables. No production credentials belong in Git.
+- Neon or another PostgreSQL connection string
+- Brevo API key and verified sender email
+- Google OAuth client ID, secret and exact callback URL
+- Cloudflare R2 bucket, scoped credentials, bucket CORS and public asset domain
+- Render web/API origins and environment variables
+- A verified creator account to promote to administrator
+
+Do not commit provider credentials or production secrets.
