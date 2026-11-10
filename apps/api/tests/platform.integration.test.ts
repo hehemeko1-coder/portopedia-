@@ -173,6 +173,13 @@ describe("identity, ownership and publishing integration", () => {
     });
     expect(forbiddenUpdate.status).toBe(404);
 
+    const crossOriginPublish = await fetch(baseUrl + "/api/v1/portfolios/publish", {
+      method: "POST",
+      headers: { ...headers("198.51.100.14", owner.cookie), Origin: "https://untrusted.example" },
+      body: "{}"
+    });
+    expect(crossOriginPublish.status).toBe(403);
+
     const publishProject = await fetch(baseUrl + "/api/v1/projects/" + publicProject.id, {
       method: "PATCH",
       headers: headers("198.51.100.14", owner.cookie),
