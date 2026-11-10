@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type PublicProject = {
   id: string;
@@ -24,8 +25,7 @@ type PublicPortfolio = {
 };
 
 async function getPortfolio(username: string): Promise<PublicPortfolio | null> {
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
-  const response = await fetch(apiUrl + "/api/v1/portfolios/" + encodeURIComponent(username), {
+  const response = await fetch(API_URL + "/api/v1/portfolios/" + encodeURIComponent(username), {
     next: { revalidate: 60 }
   });
   if (response.status === 404) return null;
