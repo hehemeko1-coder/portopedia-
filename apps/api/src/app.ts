@@ -6,6 +6,8 @@ import pinoHttp from "pino-http";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
+import { portfolioRouter } from "./routes/portfolios.js";
+import { projectRouter } from "./routes/projects.js";
 
 export const app = express();
 
@@ -53,6 +55,8 @@ api.get("/", (_request, response) => {
   });
 });
 api.use("/auth", authRouter);
+api.use("/portfolios", portfolioRouter);
+api.use("/projects", projectRouter);
 app.use("/api/v1", api);
 
 app.use((_request, response) => {
