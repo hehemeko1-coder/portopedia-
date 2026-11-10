@@ -57,13 +57,13 @@ function clearOAuthCookies(response: Response) {
     }));
   }
 }
-const SESSION_TTL_MS = env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
+const SESSION_TTL_MS = env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;\nconst DUMMY_PASSWORD_HASH = argon2.hash(randomBytes(32).toString("hex"), { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
 const cookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-  maxAge: SESSION_TTL_MS
+  maxAge: Math.floor(SESSION_TTL_MS / 1000)
 };
 
 const registerSchema = z.object({
@@ -109,7 +109,7 @@ function assertTrustedOrigin(request: Request, response: Response): boolean {
   return true;
 }
 
-async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {\n  const token = randomBytes(32).toString("base64url");\n  await prisma.emailToken.create({ data: { userId, tokenHash: hashToken(token), type, expiresAt: new Date(Date.now() + lifetimeMs) } });\n  return token;\n}\n\nasync function issueSession(userId: string, response: Response) {
+async function createEmailToken(userId: string, type: "VERIFY_EMAIL" | "PASSWORD_RESET", lifetimeMs: number) {\n  const token = randomBytes(32).toString("base64url");\n  await prisma.emailToken.deleteMany({ where: { userId, type } });\n  await prisma.emailToken.create({ data: { userId, tokenHash: hashToken(token), type, expiresAt: new Date(Date.now() + lifetimeMs) } });\n  return token;\n}\n\nasync function issueSession(userId: string, response: Response) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
   await prisma.session.create({
