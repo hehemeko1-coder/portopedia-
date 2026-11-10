@@ -13,6 +13,23 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: portopedia_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d portopedia_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/portopedia_test
+      NEXT_PUBLIC_API_URL: http://localhost:4000
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -24,6 +41,8 @@ jobs:
         run: npm install
       - name: Generate Prisma Client
         run: npm run db:generate
+      - name: Apply database migrations
+        run: npm run db:migrate
       - name: Type-check
         run: npm run typecheck
       - name: Run API tests
@@ -32,6 +51,3 @@ jobs:
         run: npm run lint
       - name: Build production applications
         run: npm run build
-        env:
-          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/portopedia
-          NEXT_PUBLIC_API_URL: http://localhost:4000
